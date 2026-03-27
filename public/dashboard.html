@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ComplianceZK Dashboard | ZK-Verified Agent Regulatory Adherence</title>
+    <style>
+        :root {
+            --primary: #0066ff;
+            --success: #00c853;
+            --warning: #ffab00;
+            --danger: #ff3d00;
+            --bg-dark: #0d1117;
+            --bg-card: #161b22;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --border: #30363d;
+            --chart-grid: #21262d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), #0044cc);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        
+        .logo-text h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .logo-text p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .card-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .card-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .compliance-tier {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .tier-high { background: rgba(0, 200, 83, 0.2); color: var(--success); }
+        .tier-medium { background: rgba(255, 171, 0, 0.2); color: var(--warning); }
+        .tier-low { background: rgba(255, 61, 0, 0.2); color: var(--danger); }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        
+        .activity-log {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .log-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            min-width: 100px;
+        }
+        
+        .log-action {
+            flex: 1;
+        }
+        
+        .log-action h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .log-action p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .log-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .status-success { background: rgba(0, 200, 83, 0.2); color: var(--success); }
+        .status-pending { background: rgba(255, 171, 0, 0.2); color: var(--warning); }
+        .status-failed { background: rgba(255, 61, 0, 0.2); color: var(--danger); }
+        
+        .proof-details {
+            background: var(--bg-dark);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            overflow-x: auto;
+        }
+        
+        .proof-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .proof-row:last-child {
+            border-bottom: none;
+        }
+        
+        .proof-label {
+            color: var(--text-secondary);
+        }
+        
+        .proof-value {
+            color: var(--primary);
+        }
+        
+        .refresh-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: #0052cc;
+        }
+        
+        .refresh-btn:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .submit-btn:hover {
+            background: #0052cc;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: rgba(255, 61, 0, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .success-message {
+            background: rgba(0, 200, 83, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">CZ</div>
+                <div class="logo-text">
+                    <h1>ComplianceZK</h1>
+                    <p>ZK-Verified Agent Regulatory Adherence</p>
+                </div>
+            </div>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                <span>System Operational</span>
+                <button class="refresh-btn" onclick="refreshDashboard()">Refresh</button>
+            </div>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Total Proofs Verified</span>
+                </div>
+                <div class="card-value" id="totalProofs">0</div>
+                <div class="card-subtitle">Lifetime verification count</div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Active Agents</span>
+                </div>
+                <div class="card-value" id="activeAgents">0</div>
+                <div class="card-subtitle">Currently executing actions</div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Compliance Rate</span>
+                </div>
+                <div class="card-value" id="complianceRate">0%</div>
+                <div class="card-subtitle">Successful verifications</div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Avg Verification Time</span>
+                </div>
+                <div class="card-value" id="avgTime">0ms</div>
+                <div class="card-subtitle">Per proof verification</div>
+            </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 2fr 1fr;">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Compliance Tier Distribution</span>
+                    <button class="refresh-btn" onclick="loadComplianceData()">Update</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="complianceChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Recent Activity</span>
+                </div>
+                <div class="activity-log" id="activityLog">
+                    <div class="log-entry">
+                        <div class="log-time">--:--:--</div>
+                        <div class="log-action">
+                            <h4>Loading activity...</h4>
+                            <p>Fetching agent logs</p>
+                        </div>
+                        <div class="log-status status-pending">Loading</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Proof Verification Details</span>
+                <button class="refresh-btn" onclick="openProofModal()">Generate New Proof</button>
+            </div>
+            <div id="proofDetails">
+                <div class="proof-details">
+                    <div class="proof-row">
+                        <span class="proof-label">Status:</span>
+                        <span class="proof-value">Ready for verification</span>
+                    </div>
+                    <div class="proof-row">
+                        <span class="proof-label">Last Update:</span>
+                        <span class="proof-value">Never</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="proofModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Generate ZK Compliance Proof</h3>
+                <button class="close-btn" onclick="closeProofModal()">&times;</button>
+            </div>
+            <div id="modalMessages"></div>
+            <form id="proofForm" onsubmit="submitProof(event)">
+                <div class="form-group">
+                    <label class="form-label">User ID (from Auth0)</label>
+                    <input type="text" class="form-input" id="userId" required placeholder="auth0|user123">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Age (for KYC verification)</label>
+                    <input type="number" class="form-input" id="userAge" required min="18" max="120" placeholder="25">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jurisdiction Code</label>
+                    <input type="text" class="form-input" id="jurisdiction" required placeholder="US-CA">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sanction Status</label>
+                    <select class="form-input" id="sanctionStatus" required>
+                        <option value="0">Clean (Not on sanctions list)</option>
+                        <option value="1">Flagged (Requires review)</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn" id="submitBtn">Generate Proof</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // === NOVEL PRIMITIVE: Real-time Compliance Dashboard ===
+        // Implements cryptographic audit trail visualization with ZK proof verification
+        // All data is fetched from on-chain state and API endpoints
+        
+        const API_BASE = '/api';
+        let complianceChart = null;
+        let activityInterval = null;
+        let refreshInterval = null;
+        
+        // Initialize dashboard on load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDashboardData();
+            startRealtimeUpdates();
+        });
+        
+        async function loadDashboardData() {
+            try {
+                const [stats, compliance, activity] = await Promise.all([
+                    fetch(`${API_BASE}/stats`).then(r => r.json()),
+                    fetch(`${API_BASE}/compliance`).then(r => r.json()),
+                    fetch(`${API_BASE}/activity`).then(r => r.json())
+                ]);
+                
+                updateStats(stats);
+                updateComplianceChart(compliance);
+                updateActivityLog(activity);
+                
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+                showError('Failed to load dashboard data. Please refresh.');
+            }
+        }
+        
+        function updateStats(stats) {
+            document.getElementById('totalProofs').textContent = stats.totalProofs || 0;
+            document.getElementById('activeAgents').textContent = stats.activeAgents || 0;
+            document.getElementById('complianceRate').textContent = `${stats.complianceRate || 0}%`;
+            document.getElementById('avgTime').textContent = `${stats.avgVerificationTime || 0}ms`;
+        }
+        
+        function updateComplianceChart(data) {
+            const ctx = document.getElementById('complianceChart').getContext('2d');
+            
+            if (complianceChart) {
+                complianceChart.destroy();
+            }
+            
+            complianceChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['High Compliance', 'Medium Compliance', 'Low Compliance'],
+                    datasets: [{
+                        data: data.tiers || [0, 0, 0],
+                        backgroundColor: [
+                            'rgba(0, 200, 83, 0.8)',
+                            'rgba(255, 171, 0, 0.8)',
+                            'rgba(255, 61, 0, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(0, 200, 83, 1)',
+                            'rgba(255, 171, 0, 1)',
+                            'rgba(255, 61, 0, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#8b949e',
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#161b22',
+                            titleColor: '#f0f6fc',
+                            bodyColor: '#8b949e',
+                            borderColor: '#30363d',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateActivityLog(activity) {
+            const container = document.getElementById('activityLog');
+            container.innerHTML = '';
+            
+            const recentActivity = activity.slice(0, 10).reverse();
+            
+            recentActivity.forEach(log => {
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                
+                const statusClass = log.status === 'success' ? 'status-success' : 
+                                   log.status === 'pending' ? 'status-pending' : 'status-failed';
+                
+                entry.innerHTML = `
+                    <div class="log-time">${formatTime(log.timestamp)}</div>
+                    <div class="log-action">
+                        <h4>${log.action}</h4>
+                        <p>User: ${log.userId || 'N/A'} | Agent: ${log.agentId || 'N/A'}</p>
+                    </div>
+                    <div class="log-status ${statusClass}">${log.status}</div>
+                `;
+                
+                container.appendChild(entry);
+            });
+        }
+        
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        function startRealtimeUpdates() {
+            activityInterval = setInterval(() => {
+                fetch(`${API_BASE}/activity`).then(r => r.json()).then(activity => {
+                    updateActivityLog(activity);
+                });
+            }, 5000);
+            
+            refreshInterval = setInterval(() => {
+                loadDashboardData();
+            }, 30000);
+        }
+        
+        async function refreshDashboard() {
+            const btn = document.querySelector('.refresh-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Refreshing...';
+            
+            await loadDashboardData();
+            
+            btn.disabled = false;
+            btn.innerHTML = 'Refresh';
+        }
+        
+        function openProofModal() {
+            document.getElementById('proofModal').classList.add('active');
+            document.getElementById('modalMessages').innerHTML = '';
+            document.getElementById('proofForm').reset();
+        }
+        
+        function closeProofModal() {
+            document.getElementById('proofModal').classList.remove('active');
+        }
+        
+        async function submitProof(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('submitBtn');
+            const messages = document.getElementById('modalMessages');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Generating...';
+            messages.innerHTML = '';
+            
+            try {
+                const formData = {
+                    userId: document.getElementById('userId').value,
+                    age: parseInt(document.getElementById('userAge').value),
+                    jurisdiction: document.getElementById('jurisdiction').value,
+                    sanctionStatus: parseInt(document.getElementById('sanctionStatus').value)
+                };
+                
+                const response = await fetch(`${API_BASE}/generate-proof`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    messages.innerHTML = `
+                        <div class="success-message">
+                            <strong>Proof Generated Successfully!</strong><br>
+                            Proof Hash: <code>${result.proofHash}</code><br>
+                            Valid Until: ${formatProofExpiry(result.validUntil)}
+                        </div>
+                    `;
+                    
+                    document.getElementById('proofDetails').innerHTML = `
+                        <div class="proof-details">
+                            <div class="proof-row">
+                                <span class="proof-label">Status:</span>
+                                <span class="proof-value">Verified</span>
+                            </div>
+                            <div class="proof-row">
+                                <span class="proof-label">Proof Hash:</span>
+                                <span class="proof-value">${result.proofHash}</span>
+                            </div>
+                            <div class="proof-row">
+                                <span class="proof-label">Compliance Tier:</span>
+                                <span class="proof-value">${result.complianceTier}</span>
+                            </div>
+                            <div class="proof-row">
+                                <span class="proof-label">Valid Until:</span>
+                                <span class="proof-value">${formatProofExpiry(result.validUntil)}</span>
+                            </div>
+                            <div class="proof-row">
+                                <span class="proof-label">Verification Time:</span>
+                                <span class="proof-value">${result.verificationTime}ms</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    setTimeout(() => closeProofModal(), 3000);
+                } else {
+                    messages.innerHTML = `
+                        <div class="error-message">
+                            <strong>Generation Failed:</strong> ${result.error || 'Unknown error'}
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                messages.innerHTML = `
+                    <div class="error-message">
+                        <strong>Network Error:</strong> ${error.message}
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Generate Proof';
+            }
+        }
+        
+        function formatProofExpiry(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('en-US', {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            });
+        }
+        
+        function showError(message) {
+            const container = document.querySelector('.container');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            container.insertBefore(errorDiv, container.firstChild);
+            
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('proofModal').addEventListener('click', (e) => {
+            if (e.target.id === 'proofModal') {
+                closeProofModal();
+            }
+        });
+        
+        // Keyboard shortcut to refresh
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                refreshDashboard();
+            }
+        });
+    </script>
+</body>
+</html>
