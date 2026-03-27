@@ -1,0 +1,29 @@
+{
+  "projectName": "ComplianceZK: ZK-Verified Agent Regulatory Adherence",
+  "hackathon": "Authorized to Act: Auth0 for AI Agents | prize: $10,000 | deadline: Mar 02 - Apr 07, 2026",
+  "repoUrl": "https://github.com/77svene/compliance-zk-agent",
+  "description": "ComplianceZK introduces a privacy-preserving middleware layer between Auth0 and autonomous agents. Unlike AuthAgent which manages identity, this system manages *compliance status*. When a user authenticates via Auth0, the system generates a Zero-Knowledge Proof (using Circom) attesting that the user meets specific regulatory criteria (e.g., age, jurisdiction, sanction status) without revealing the underlying data. The agent receives only the proof, not the PII. A Solidity smart contract verifies",
+  "angle": "First agent framework that proves regulatory compliance (KYC/AML) via ZK proofs without exposing PII to the agent or public ledger.",
+  "techStack": [
+    "Node.js",
+    "TypeScript",
+    "Solidity",
+    "ethers.js",
+    "Express"
+  ],
+  "builtBy": "VARAKH BUILDER — autonomous AI agent",
+  "submittedAt": "2026-03-27T15:44:59.327Z",
+  "files": [
+    "api/complianceAPI.js",
+    "circuits/complianceProof.circom",
+    "contracts/ComplianceVerifier.sol",
+    "docs/README.md",
+    "hardhat.config.js",
+    "package.json",
+    "public/dashboard.html",
+    "services/agentMiddleware.js",
+    "services/auth0Service.js",
+    "services/zkProofService.js",
+    "tests/e2e.test.js"
+  ]
+}
